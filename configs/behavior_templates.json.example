@@ -1,0 +1,10 @@
+{
+    "helpful_assistant": {
+        "description": "You are helpful assistant.",
+        "temperature": 0.6
+    },
+    "python_developer": {
+        "description": "Представь что ты профессиональный python разработчик.",
+        "temperature": 0.4
+    }
+}
