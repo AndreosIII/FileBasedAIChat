@@ -11,6 +11,14 @@
         "api_key": "",
         "api_base": ""
     },
+    "claude-3-5-sonnet-20240620": {
+        "api_key": "",
+        "api_base": ""
+    },
+    "claude-3-haiku-20240307": {
+        "api_key": "",
+        "api_base": ""
+    },
     "llama3-8b-instruct": {
         "api_key": "",
         "api_base": ""

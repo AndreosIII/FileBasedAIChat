@@ -152,12 +152,15 @@ def parse_behavior_from_dialog(dialog_content):
 def parse_conversation_from_dialog(dialog_content):
     """
     Извлекает высказывания участников диалога из содержимого файла.
-    
+
     Args:
         dialog_content: Содержимое файла диалога в виде строки.
-        
+
     Returns:
         Список кортежей, где каждый кортеж содержит маркер участника (Human или AI) и его высказывание.
+
+    Raises:
+        ValueError: Если последний запрос от пользователя пуст или отсутствует.
     """
     pattern = re.compile(CONVERSATION_REGEX, re.MULTILINE | re.DOTALL)
     conversation = []
@@ -166,6 +169,9 @@ def parse_conversation_from_dialog(dialog_content):
         speaker = match.group(1)
         statement = match.group(2).strip()
         conversation.append((speaker, statement))
+
+    if not conversation or conversation[-1][0] != HUMAN_MARKER or not conversation[-1][1]:
+        raise ValueError("Последний запрос от пользователя пуст или отсутствует.")
 
     return conversation
 

@@ -1,6 +1,6 @@
 import argparse
 from src.dialog_manager import parse_dialog_file, append_ai_response_to_dialog, check_or_create_dialog_file
-from src.api_communicator import communicate_with_openai
+from src.api_communicator import communicate_with_ai_model
 
 def main():
     """
@@ -28,7 +28,7 @@ def main():
     try:
         if check_or_create_dialog_file(args.file_path):
             dialog_data = parse_dialog_file(args.file_path)
-            response = communicate_with_openai(dialog_data)
+            response = communicate_with_ai_model(dialog_data)
             append_ai_response_to_dialog(args.file_path, response)
         else:
             print("Файл диалога создан:", args.file_path)
