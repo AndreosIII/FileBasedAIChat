@@ -1,10 +1,12 @@
+from typing import Dict, List, Tuple
 import openai
 from openai.error import OpenAIError, RateLimitError, InvalidRequestError, AuthenticationError
-from .constants import HUMAN_MARKER, AI_MARKER
+from src.constants import AI_MARKER, HUMAN_MARKER
 
-DEFAULT_API_BASE = 'https://api.openai.com'
+DEFAULT_API_BASE = "https://api.openai.com"
 
-def openai_format_messages(behavior_description, conversation):
+
+def openai_format_messages(behavior_description: str, conversation: List[Tuple[str, str]]) -> List[Dict[str, str]]:
     """
     Форматирует описание поведения и историю диалога в список сообщений для OpenAI API.
 
@@ -26,7 +28,10 @@ def openai_format_messages(behavior_description, conversation):
 
     return messages
 
-def openai_send_request_to_model(model, api_key, temperature, messages, api_base=DEFAULT_API_BASE):
+
+def openai_send_request_to_model(
+    model: str, api_key: str, temperature: float, messages: List, api_base: str = DEFAULT_API_BASE
+):
     """
     Отправляет запрос к модели OpenAI и получает потоковый ответ.
 
@@ -51,12 +56,7 @@ def openai_send_request_to_model(model, api_key, temperature, messages, api_base
     openai.api_base = api_base
 
     try:
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            stream=True
-        )
+        response = openai.ChatCompletion.create(model=model, messages=messages, temperature=temperature, stream=True)
 
         for chunk in response:
             if "content" in chunk["choices"][0]["delta"]:
@@ -73,21 +73,23 @@ def openai_send_request_to_model(model, api_key, temperature, messages, api_base
     except Exception as e:
         print(f"Неожиданная ошибка: {e}")
 
-def communicate_with_openai(api_key, api_base, dialog_data):
+
+def communicate_with_openai(api_key: str, api_base: str, dialog_data: Dict):
     """
     Интегрирует взаимодействие с OpenAI API, используя данные из файла диалога.
 
     Args:
         api_key (str): API ключ для доступа к сервису OpenAI.
         api_base (str): Базовый URL API OpenAI.
-        dialog_data (dict): Словарь с данными диалога, включая модель, температуру, описание поведения и историю диалога.
+        dialog_data (dict): Словарь с данными диалога, включая модель, температуру,
+        описание поведения и историю диалога.
 
     Returns:
         Generator: Генератор, который выдает ответы модели по мере их получения.
     """
-    model_name = dialog_data['model']
-    temperature = dialog_data['temperature']
-    messages = openai_format_messages(dialog_data['behavior_description'], dialog_data['conversation'])
+    model_name = dialog_data["model"]
+    temperature = dialog_data["temperature"]
+    messages = openai_format_messages(dialog_data["behavior_description"], dialog_data["conversation"])
     response = openai_send_request_to_model(model_name, api_key, temperature, messages, api_base)
 
     return response
