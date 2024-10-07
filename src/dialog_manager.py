@@ -1,8 +1,12 @@
 import os
 import json
 import re
+import base64
+import mimetypes
 
-from .constants import MODELS_CONFIG_PATH, HUMAN_MARKER, AI_MARKER
+from pathlib import Path
+
+from .constants import MODELS_CONFIG_PATH, HUMAN_MARKER, AI_MARKER, IMG_REGEX
 
 BEHAVIOR_CONFIG_PATH = 'configs/behavior_templates.json'
 DEFAULT_DIALOG_CONFIG_PATH = 'configs/default_dialog_config.json'
@@ -149,6 +153,22 @@ def parse_behavior_from_dialog(dialog_content):
     else:
         raise ValueError("В файле диалога отсутствует указание поведения.")
 
+def process_image(image_path):
+    """
+    Обрабатывает изображение: читает файл, кодирует в base64 и определяет MIME-тип.
+
+    Args:
+        image_path (str): Путь к файлу изображения.
+
+    Returns:
+        tuple: (image_data, image_media_type)
+    """
+    path = Path(image_path)
+    with open(path, "rb") as image_file:
+        image_data = base64.b64encode(image_file.read()).decode('utf-8')
+    image_media_type = mimetypes.guess_type(path)[0]
+    return image_data, image_media_type
+
 def parse_conversation_from_dialog(dialog_content):
     """
     Извлекает высказывания участников диалога из содержимого файла.
@@ -168,7 +188,37 @@ def parse_conversation_from_dialog(dialog_content):
     for match in pattern.finditer(dialog_content):
         speaker = match.group(1)
         statement = match.group(2).strip()
-        conversation.append((speaker, statement))
+
+        content = []
+        current_text = ""
+        for item in re.split(r'(img\([^)]+\))', statement):
+            if item.startswith("img("):
+                if current_text:
+                    content.append({"type": "text", "text": current_text.strip()})
+                    current_text = ""
+                img_match = re.match(IMG_REGEX, item)
+                if img_match:
+                    image_path = img_match.group(1)
+                    try:
+                        image_data, image_media_type = process_image(image_path)
+                        content.append({
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": image_media_type,
+                                "data": image_data,
+                            }
+                        })
+                    except Exception as e:
+                        print(f"Ошибка при обработке изображения {image_path}: {e}")
+                        content.append({"type": "text", "text": f"[Ошибка загрузки изображения: {image_path}]"})
+            else:
+                current_text += item
+
+        if current_text:
+            content.append({"type": "text", "text": current_text.strip()})
+
+        conversation.append((speaker, content))
 
     if not conversation or conversation[-1][0] != HUMAN_MARKER or not conversation[-1][1]:
         raise ValueError("Последний запрос от пользователя пуст или отсутствует.")

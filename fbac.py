@@ -32,8 +32,16 @@ def main():
             append_ai_response_to_dialog(args.file_path, response)
         else:
             print("Файл диалога создан:", args.file_path)
+    except FileNotFoundError as e:
+        print(f"Ошибка: Файл не найден - {e}")
+    except PermissionError as e:
+        print(f"Ошибка: Нет доступа к файлу - {e}")
+    except ValueError as e:
+        print(f"Ошибка в формате данных: {e}")
     except KeyboardInterrupt:
         print("\nОтвет прерван пользователем.")
+    except Exception as e:
+        print(f"Произошла непредвиденная ошибка: {e}")
 
 if __name__ == '__main__':
     main()

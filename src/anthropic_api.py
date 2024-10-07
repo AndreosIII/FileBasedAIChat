@@ -20,7 +20,12 @@ def anthropic_format_messages(conversation):
             anthropic_role = "user"
         elif role == AI_MARKER:
             anthropic_role = "assistant"
-        messages.append({"role": anthropic_role, "content": content})
+
+        message = {
+            "role": anthropic_role,
+            "content": content if isinstance(content, list) else [{"type": "text", "text": content}]
+        }
+        messages.append(message)
 
     return messages
 
@@ -44,7 +49,7 @@ def anthropic_send_request_to_model(model, api_key, api_base, behavior_descripti
     try:
         response = client.messages.create(
             model=model,
-            max_tokens=MAX_TOKENS,  # Используем константу вместо "magic number"
+            max_tokens=MAX_TOKENS,
             temperature=temperature,
             system=behavior_description,
             messages=messages,
